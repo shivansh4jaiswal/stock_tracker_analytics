@@ -1,0 +1,51 @@
+def calculate_worth(s):
+    return sum(ord(c) - ord('a') + 1 for c in s)
+
+def solve(idx, budget, chosen, cost, worth, contradictions, memo):
+    key = (idx, budget, tuple(sorted(chosen)))
+    if key in memo:
+        return memo[key]
+    
+    if idx == len(cost):
+        return 0
+    
+    # Option 1: Skip current string
+    max_worth = solve(idx + 1, budget, chosen, cost, worth, contradictions, memo)
+    
+    # Option 2: Include current string if no contradictions and cost fits budget
+    can_include = True
+    for c in contradictions[idx]:
+        if c in chosen:
+            can_include = False
+            break
+
+    if can_include and budget >= cost[idx]:
+        new_chosen = chosen.copy()
+        new_chosen.add(idx)
+        included_worth = worth[idx] + solve(idx + 1, budget - cost[idx], new_chosen, cost, worth, contradictions, memo)
+        if included_worth > max_worth:
+            max_worth = included_worth
+    
+    memo[key] = max_worth
+    return max_worth
+
+def main():
+    N, M = map(int, input().split())
+    strings = input().split()
+    costs = list(map(int, input().split()))
+    contradictions = {i: set() for i in range(N)}
+    for _ in range(M):
+        a, b = input().split()
+        i, j = strings.index(a), strings.index(b)
+        contradictions[i].add(j)
+        contradictions[j].add(i)
+    budget = int(input())
+
+    worths = [calculate_worth(s) for s in strings]
+
+    memo = {}
+    max_worth = solve(0, budget, set(), costs, worths, contradictions, memo)
+    print(max_worth)
+
+if __name__ == "__main__":
+    main()
